@@ -18,6 +18,7 @@
 
 package io.github.solclient.updater;
 
+import java.awt.Color;
 import java.io.*;
 import java.lang.invoke.*;
 import java.net.*;
@@ -50,10 +51,10 @@ public final class Updater {
 
 		URL url = new URL(latestRelease.getUrl());
 		JFrame ui = new JFrame();
+		ui.setBackground(UpdatePane.BG);
 		ui.setContentPane(new UpdatePane(progress));
-		ui.setTitle("Downloading Sol Client...");
+		ui.setTitle("Sol Client Updater");
 		ui.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		ui.setUndecorated(true);
 		ui.setResizable(false);
 		ui.setSize(380, 170);
 		ui.setLocationRelativeTo(null);
