@@ -1,0 +1,10 @@
+.settings/
+.project
+.classpath
+*.launch
+.gradle
+bin
+*.log
+**/.idea/**
+build
+.sol-client-launch/
