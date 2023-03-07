@@ -21,9 +21,8 @@ package io.github.solclient.updater.util;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
 
-import io.github.solclient.updater.util.JsonParser.JsonParseException;
+import com.google.gson.*;
 
 public final class Release {
 
@@ -44,15 +43,15 @@ public final class Release {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static Release latest(String repo) throws JsonParseException, IOException {
+	public static Release latest(String repo) throws IOException {
 		URL url = new URL(String.format("https://api.github.com/repos/%s/releases/latest", repo));
-		try (InputStream in = Util.getHttpConnection(url).getInputStream()) {
-			Map<String, Object> response = (Map<String, Object>) JsonParser
-					.parse(new InputStreamReader(in, StandardCharsets.UTF_8));
-			String downloadUrl = ((List<Map<String, String>>) response.get("assets")).get(0)
-					.get("browser_download_url");
-			return new Release(downloadUrl, SemVer.tryParse(response.get("name").toString())
-					.orElseGet(() -> new SemVer(response.get("tag_name").toString())));
+		try (Reader reader = new InputStreamReader(Util.getHttpConnection(url).getInputStream(),
+				StandardCharsets.UTF_8)) {
+			JsonObject response = new JsonParser().parse(reader).getAsJsonObject();
+			String downloadUrl = response.getAsJsonArray("assets").get(0).getAsJsonObject().get("browser_download_url")
+					.getAsString();
+			return new Release(downloadUrl, SemVer.tryParse(response.get("name").getAsString())
+					.orElseGet(() -> new SemVer(response.get("tag_name").getAsString())));
 		}
 	}
 

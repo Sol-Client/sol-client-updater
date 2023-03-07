@@ -26,7 +26,6 @@ import java.nio.file.*;
 import javax.swing.JFrame;
 
 import io.github.solclient.updater.util.*;
-import io.github.solclient.updater.util.JsonParser.JsonParseException;
 
 public final class Updater {
 
@@ -37,7 +36,7 @@ public final class Updater {
 		run(update(args), args);
 	}
 
-	private static Path update(String[] args) throws JsonParseException, IOException {
+	private static Path update(String[] args) throws IOException {
 		Path folder = resolveFolder(args);
 		Path jar = folder.resolve("sol-client.jar");
 

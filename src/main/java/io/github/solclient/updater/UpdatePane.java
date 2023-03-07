@@ -40,8 +40,7 @@ public final class UpdatePane extends JPanel {
 
 		graphics.setColor(ACCENT);
 		graphics.fillRoundRect(getWidth() / 2 - PROGRESS_WIDTH / 2, getHeight() - PROGRESS_HEIGHT - 35,
-				(int) (PROGRESS_WIDTH * progress.percent()), PROGRESS_HEIGHT, PROGRESS_HEIGHT,
-				PROGRESS_HEIGHT);
+				(int) (PROGRESS_WIDTH * progress.percent()), PROGRESS_HEIGHT, PROGRESS_HEIGHT, PROGRESS_HEIGHT);
 
 		repaint(1000 / 60);
 	}
