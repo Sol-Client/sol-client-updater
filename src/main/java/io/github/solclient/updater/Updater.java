@@ -18,7 +18,6 @@
 
 package io.github.solclient.updater;
 
-import java.awt.Color;
 import java.io.*;
 import java.lang.invoke.*;
 import java.net.*;
@@ -40,47 +39,60 @@ public final class Updater {
 	private static Path update(String[] args) throws IOException {
 		Path folder = resolveFolder(args);
 		Path jar = folder.resolve("sol-client.jar");
+		Path jarTmp = jar.resolveSibling(jar.getFileName() + ".tmp");
 
 		if (!Files.isDirectory(folder))
 			Files.createDirectories(folder);
 
-		Release latestRelease = Release
-				.latest(System.getProperty("io.github.solclient.updater.repo", "Sol-Client/client"));
-
-		DownloadProgress progress = new DownloadProgress();
-
-		URL url = new URL(latestRelease.getUrl());
-		JFrame ui = new JFrame();
-		ui.setBackground(UpdatePane.BG);
-		ui.setContentPane(new UpdatePane(progress));
-		ui.setTitle("Sol Client Updater");
-		ui.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		ui.setResizable(false);
-		ui.setSize(380, 170);
-		ui.setLocationRelativeTo(null);
-		ui.setVisible(true);
-
-		HttpURLConnection connection = Util.getHttpConnection(url);
-
-		progress.max = Integer.parseInt(connection.getHeaderField("content-length"));
-
-		try (InputStream in = connection.getInputStream(); OutputStream out = Files.newOutputStream(jar)) {
-			byte[] buffer = new byte[8192];
-			int read;
-			while ((read = in.read(buffer)) >= 0) {
-				if (!ui.isVisible()) {
-					Files.delete(jar);
-					System.exit(1);
-					break;
-				}
-
-				out.write(buffer);
-				progress.value += read;
-			}
+		Release latestRelease = null;
+		try {
+			latestRelease = Release.latest(System.getProperty("io.github.solclient.updater.repo", "Sol-Client/client"));
+		} catch (Throwable error) {
+			System.err.println("Could not check for updates");
+			error.printStackTrace();
 		}
 
-		ui.setVisible(false);
-		ui.dispose();
+		if (!Files.exists(jar)) {
+			if (latestRelease == null)
+				throw new IllegalStateException("Could not perform initial download");
+
+			DownloadProgress progress = new DownloadProgress();
+
+			URL url = new URL(latestRelease.getUrl());
+			JFrame ui = new JFrame();
+			ui.setBackground(UpdatePane.BG);
+			ui.setContentPane(new UpdatePane(progress));
+			ui.setTitle("Sol Client Updater");
+			ui.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			ui.setResizable(false);
+			ui.setSize(380, 170);
+			ui.setLocationRelativeTo(null);
+			ui.setVisible(true);
+
+			HttpURLConnection connection = Util.getHttpConnection(url);
+
+			progress.max = Integer.parseInt(connection.getHeaderField("content-length"));
+
+			try (InputStream in = connection.getInputStream(); OutputStream out = Files.newOutputStream(jarTmp)) {
+				byte[] buffer = new byte[8192];
+				int read;
+				while ((read = in.read(buffer)) >= 0) {
+					if (!ui.isVisible()) {
+						Files.delete(jarTmp);
+						System.exit(1);
+						break;
+					}
+
+					out.write(buffer, 0, read);
+					progress.value += read;
+				}
+			}
+
+			ui.setVisible(false);
+			ui.dispose();
+
+			Files.move(jarTmp, jar);
+		}
 
 		return jar;
 	}
@@ -104,16 +116,16 @@ public final class Updater {
 	}
 
 	private static void run(Path path, String[] args) throws Throwable {
-		try (URLClassLoader loader = new URLClassLoader(new URL[] { path.toUri().toURL() })) {
-			// @formatter:off
-			MethodHandle mainMethod = MethodHandles.lookup().findStatic(
-					loader.loadClass(MAIN_CLASS),
-					"main",
-					MAIN_METHOD
-			);
-			// @formatter:on
-			mainMethod.invokeExact(args);
-		}
+		ClasspathUtil.addJar(path);
+
+		// @formatter:off
+		MethodHandle mainMethod = MethodHandles.lookup().findStatic(
+				Class.forName(MAIN_CLASS),
+				"main",
+				MAIN_METHOD
+		).asFixedArity();
+		// @formatter:on
+		mainMethod.invokeExact(args);
 	}
 
 }

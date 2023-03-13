@@ -9,3 +9,15 @@ repositories {
 dependencies {
 	compileOnly 'com.google.code.gson:gson:2.2.4'
 }
+
+def agent = 'io.github.solclient.updater.util.ClasspathUtil'
+
+jar {
+	manifest {
+		attributes(
+			'Agent-Class', agent,
+			'Launcher-Agent-Class': agent,
+			'Premain-Class': agent
+		)
+	}
+}

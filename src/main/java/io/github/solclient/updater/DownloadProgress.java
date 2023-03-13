@@ -7,6 +7,7 @@ public final class DownloadProgress {
 	public double percent() {
 		if (max == 0)
 			return 0;
+
 		return (double) value / max;
 	}
 
