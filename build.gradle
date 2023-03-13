@@ -15,7 +15,7 @@ def agent = 'io.github.solclient.updater.util.ClasspathUtil'
 jar {
 	manifest {
 		attributes(
-			'Agent-Class', agent,
+			'Agent-Class': agent,
 			'Launcher-Agent-Class': agent,
 			'Premain-Class': agent
 		)
