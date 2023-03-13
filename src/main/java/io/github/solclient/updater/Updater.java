@@ -21,6 +21,7 @@ package io.github.solclient.updater;
 import java.io.*;
 import java.lang.invoke.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 
 import javax.swing.JFrame;
@@ -40,19 +41,40 @@ public final class Updater {
 		Path folder = resolveFolder(args);
 		Path jar = folder.resolve("sol-client.jar");
 		Path jarTmp = jar.resolveSibling(jar.getFileName() + ".tmp");
+		Path version = folder.resolve("version.txt");
 
 		if (!Files.isDirectory(folder))
 			Files.createDirectories(folder);
+
+		SemVer currentVersion = null;
+		try {
+			if (Files.exists(version))
+				currentVersion = SemVer.tryParse(Files.readAllLines(version).get(0)).orElse(null);
+		} catch (IOException error) {
+			System.err.println("Error: Could not read current version");
+			error.printStackTrace();
+		}
 
 		Release latestRelease = null;
 		try {
 			latestRelease = Release.latest(System.getProperty("io.github.solclient.updater.repo", "Sol-Client/client"));
 		} catch (Throwable error) {
-			System.err.println("Could not check for updates");
+			System.err.println("Error: Could not check for updates");
 			error.printStackTrace();
 		}
 
-		if (!Files.exists(jar)) {
+		boolean exists = Files.exists(jar);
+		if (!exists || latestRelease.getVersion().isNewerThan(currentVersion)) {
+			if (exists)
+				Files.delete(jar);
+			if (Files.exists(jarTmp)) {
+				System.out.println("Warning: Found existing download - download was likely interupted");
+				Files.delete(jarTmp);
+			}
+
+			System.out.println("Updating to " + latestRelease.getVersion() + "...");
+			long lastStatus = System.currentTimeMillis();
+
 			if (latestRelease == null)
 				throw new IllegalStateException("Could not perform initial download");
 
@@ -85,6 +107,11 @@ public final class Updater {
 
 					out.write(buffer, 0, read);
 					progress.value += read;
+
+					if (System.currentTimeMillis() - lastStatus > 1000) {
+						lastStatus = System.currentTimeMillis();
+						System.out.print("Download progress: " + progress);
+					}
 				}
 			}
 
@@ -92,6 +119,7 @@ public final class Updater {
 			ui.dispose();
 
 			Files.move(jarTmp, jar);
+			Files.write(version, latestRelease.getVersion().toString().getBytes(StandardCharsets.UTF_8));
 		}
 
 		return jar;

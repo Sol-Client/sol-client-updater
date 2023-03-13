@@ -85,7 +85,7 @@ public class SemVer {
 
 	public boolean isNewerThan(SemVer version) {
 		if (version == null)
-			return false;
+			return true;
 
 		if (major > version.major)
 			return true;

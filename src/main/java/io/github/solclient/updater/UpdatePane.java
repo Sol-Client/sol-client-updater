@@ -1,13 +1,10 @@
 package io.github.solclient.updater;
 
 import java.awt.*;
-import java.text.DecimalFormat;
 
 import javax.swing.JPanel;
 
 public final class UpdatePane extends JPanel {
-
-	private static final DecimalFormat FORMAT = new DecimalFormat("0.0");
 
 	private static final long serialVersionUID = 1L;
 	private static final String TEXT = "Downloading Sol Client...";
@@ -51,12 +48,7 @@ public final class UpdatePane extends JPanel {
 		graphics.setColor(FG);
 		graphics.setFont(graphics.getFont().deriveFont(Font.PLAIN, 10));
 
-		String progressString;
-		if (progress.max == 0)
-			progressString = "Waiting...";
-		else
-			progressString = FORMAT.format(progress.value / 1024F / 1024F) + " / " + FORMAT.format(progress.max / 1024F / 1024F) + " MB";
-
+		String progressString = progress.toString();
 		graphics.drawString(progressString, x + PROGRESS_WIDTH - graphics.getFontMetrics().stringWidth(progressString) - 2, y - 5);
 
 		repaint(1000 / 60);
