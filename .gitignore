@@ -8,3 +8,4 @@ bin
 **/.idea/**
 build
 .sol-client-launch/
+run/
