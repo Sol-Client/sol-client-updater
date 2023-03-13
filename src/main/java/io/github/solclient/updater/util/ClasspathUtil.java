@@ -34,8 +34,10 @@ public final class ClasspathUtil {
 	}
 
 	public static void addJar(Path jar) throws IOException {
-		if (activeInst != null)
+		if (activeInst != null) {
 			activeInst.appendToSystemClassLoaderSearch(new JarFile(jar.toFile()));
+			return;
+		}
 
 		ClassLoader loader = ClasspathUtil.class.getClassLoader();
 		if (!(loader instanceof URLClassLoader))
